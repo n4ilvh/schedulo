@@ -5,7 +5,7 @@ body {
 }
 
 .title {
-    font-size: 5ch;
+    font-size: 8ch;
     color: #848b67;
     display: flex;
     align-items: center;
@@ -121,6 +121,7 @@ body {
     background-color: rgba(255, 255, 255, 0.3); /* Soft glass effect */
     border-radius: 12px;
     padding: 12px;
+    text-align: center;
     
 }
 
@@ -196,6 +197,7 @@ body {
 
 #edit {
     display: flex;
+    flex-direction: row;
     flex-wrap: wrap;
     align-items: flex-end;
     justify-content: center;
@@ -203,7 +205,8 @@ body {
     background-color: #4b4a36; /* Matching your .upper background */
     padding: 20px;
     border-radius: 20px;
-    margin-top: 20px;
+    margin-top: 0px;
+    
 }
 
 .date-group {
@@ -268,4 +271,24 @@ body {
 
 .breaks-section {
     display: flex;
+
+}
+
+.breaks-container {
+    gap: 10px; 
+    display: flex; 
+    max-width: 50vw; 
+    overflow-x: scroll; 
+    scrollbar-color: #83965F #3d3c33;
+    scrollbar-width: thin;
+    height: 100%;
+}
+
+/* =========================================================
+   MOBILE RESPONSIVE BREAKPOINT (768px and down)
+   ========================================================= */
+@media (max-width: 768px) {
+    .title {
+        display: none;
+    }
 }

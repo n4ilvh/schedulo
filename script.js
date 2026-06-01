@@ -20,7 +20,7 @@ exportButton.classList.add("button");
 // hide some elements on load
 imgBox.style.display = "none";
 calendarGrid.style.display = "none";
-// dateBox.style.display = "none";
+dateBox.style.display = "none";
 
 // add buttons to top bar
 upper.appendChild(authButton);
@@ -41,6 +41,36 @@ window.onload = () => {
         textarea.innerHTML = 'Calendar authorization failed. Please try again.';
     }
 };
+
+// checks for log in
+app.get('/api/auth/status', async (req, res) => {
+    try {
+        // 1. Check if your OAuth client actually has credentials set
+        const tokens = oauth2Client.credentials;
+        
+        if (!tokens || !tokens.access_token) {
+            return res.json({ loggedIn: false });
+        }
+
+        // 2. Optional: Check if the access token has expired
+        const isExpired = tokens.expiry_date ? Date.now() >= tokens.expiry_date : true;
+        if (isExpired) {
+            // If you have a refresh token, you could refresh it here. 
+            // Otherwise, they are effectively logged out.
+            return res.json({ loggedIn: false, message: "Token expired" });
+        }
+
+        // 3. If tokens exist and are valid, they are logged in!
+        res.json({ 
+            loggedIn: true, 
+            scopes: tokens.scope 
+        });
+
+    } catch (error) {
+        console.error("Auth status check failed:", error);
+        res.status(500).json({ loggedIn: false, error: "Internal server error" });
+    }
+});
 
 // Display image on upload
 fileSelector.onchange = () => {
@@ -189,10 +219,118 @@ function renderCalendar(scheduleByDay) {
     });
 }
 
+
+
+// ==========================================
+// 1.5 add dates/breaks
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    const addBreakBtn = document.getElementById('add-break-btn');
+    const breaksContainer = document.getElementById('breaks-container');
+
+    // Function to add a new break range row
+    addBreakBtn.addEventListener('click', () => {
+        const breakRow = document.createElement('div');
+        breakRow.className = 'break-row';
+
+        breakRow.innerHTML = `
+            <div class="date-group">
+                <input type="date" class="date-input break-start" aria-label="Break Start Date">
+            </div>
+            <span style="color: #f6cf8a;">to</span>
+            <div class="date-group">
+                <input type="date" class="date-input break-end" aria-label="Break End Date">
+            </div>
+            <button type="button" class="remove-btn" title="Remove Break">&times;</button>
+        `;
+
+        // Event listener to remove this specific break row when clicking the 'X'
+        breakRow.querySelector('.remove-btn').addEventListener('click', () => {
+            breakRow.remove();
+        });
+
+        breaksContainer.appendChild(breakRow);
+    });
+});
+
+// Helper function to extract all chosen dates when parsing your timetable data
+function getSemesterDateData() {
+    const termStartStr = document.getElementById('first-class').value;
+    const termEndStr = document.getElementById('last-class').value;
+    
+    // 1. Check if the master term dates are missing completely
+    if (!termStartStr || !termEndStr) {
+        alert("Please enter both the first and last day of classes.");
+        return null; 
+    }
+
+    const termStart = new Date(termStartStr);
+    const termEnd = new Date(termEndStr);
+
+    // 2. Validate that the semester starts before it ends
+    if (termStart >= termEnd) {
+        alert("Invalid Semester Range: The first day of classes must be before the last day.");
+        return null;
+    }
+    
+    const breaks = [];
+    let breaksValid = true;
+
+    document.querySelectorAll('.break-row').forEach((row, index) => {
+        const startStr = row.querySelector('.break-start').value;
+        const endStr = row.querySelector('.break-end').value;
+        
+        // Skip completely blank rows, but flag incomplete ones
+        if (!startStr && !endStr) return;
+        if (!startStr || !endStr) {
+            alert(`Break row #${index + 1} has an incomplete date range.`);
+            breaksValid = false;
+            return;
+        }
+
+        const breakStart = new Date(startStr);
+        const breakEnd = new Date(endStr);
+
+        // 3. Check if the individual break row is chronologically backwards
+        if (breakStart > breakEnd) {
+            alert(`Invalid Break Range: Break #${index + 1} ends before it starts.`);
+            breaksValid = false;
+            return;
+        }
+
+        // 4. Check if the break actually falls inside the school semester window
+        if (breakStart < termStart || breakEnd > termEnd) {
+            alert(`Invalid Break Range: Break #${index + 1} must fall within the semester dates.`);
+            breaksValid = false;
+            return;
+        }
+
+        // If it passes all checks, save the original strings
+        breaks.push({ start: startStr, end: endStr });
+    });
+
+    // If any break was invalid, halt execution
+    if (!breaksValid) return null;
+
+    // Return the clean verified data ready for calendar layout rendering!
+    return {
+        termStart: termStartStr,
+        termEnd: termEndStr,
+        breaks
+    };
+}
+
 // =========================================================
 // READ EDITED DATA & INJECT TO GOOGLE CALENDAR
 // =========================================================
 exportButton.onclick = async () => {
+    if (dateBox.style.display == 'none') {
+        alert("Parse your timetable image before exporting.");
+        return;
+    }
+    const dateData = getSemesterDateData();
+    if (!dateData) return;
+
     const calendarGrid = document.getElementById('calendar-grid');
     const dayColumns = calendarGrid?.querySelectorAll('.day-column');
 
@@ -228,7 +366,12 @@ exportButton.onclick = async () => {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ schedule: updatedSchedule }) // Send the fresh edits
+            body: JSON.stringify({ 
+                schedule: updatedSchedule,
+                termStart: dateData.termStart,
+                termEnd: dateData.termEnd,
+                breaks: dateData.breaks
+            })
         });
 
         const data = await response.json();

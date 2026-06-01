@@ -2,25 +2,24 @@ import express from 'express';
 import multer from 'multer';
 import cors from 'cors';
 import { GoogleGenAI } from '@google/genai';
-import 'dotenv/config'; // Loads GEMINI_API_KEY from a .env file
+import 'dotenv/config'; 
 import { google } from 'googleapis';
 
 const app = express();
-app.use(cors()); // Allow your frontend to talk to the backend
+app.use(cors()); 
 app.use(express.json());
 
-// Setup memory storage for uploaded images so we don't clog up the disk
 const upload = multer({ storage: multer.memoryStorage() });
-
-// Initialize the Google Gen AI client
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-// Initialize the OAuth2 client using your credentials from the .env file
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
-  'http://localhost:3000/oauth2callback' // Must match Cloud Console
+  'http://localhost:3000/oauth2callback' 
 );
+
+// Helper array tracking strings to map day numbers dynamically
+const DAYS_ORDER = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 // ==========================================
 // 1. TIMETABLE EXTRACTION ROUTE
@@ -31,7 +30,6 @@ app.post('/api/extract-schedule', upload.single('timetable'), async (req, res) =
             return res.status(400).json({ error: 'No image file uploaded.' });
         }
 
-        // Convert file buffer to base64 format for Gemini
         const base64Image = req.file.buffer.toString('base64');
         const mimeType = req.file.mimetype;
 
@@ -50,7 +48,6 @@ app.post('/api/extract-schedule', upload.single('timetable'), async (req, res) =
             If you do not detect a schedule return nothing.
         `;
 
-        // FIXED SDK CALL STRUCTURE
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: [
@@ -64,10 +61,7 @@ app.post('/api/extract-schedule', upload.single('timetable'), async (req, res) =
             ],
         });
 
-        // Safe extraction of the text response
         const responseText = response.text;
-
-        // Clean up markdown code blocks if the model accidentally included them
         const cleanJsonText = responseText.replace(/```json|```/g, "").trim();
         const parsedSchedule = JSON.parse(cleanJsonText);
 
@@ -80,7 +74,6 @@ app.post('/api/extract-schedule', upload.single('timetable'), async (req, res) =
             if (structuredByDay[item.day]) {
                 structuredByDay[item.day].push(item);
             } else {
-                // Handle edge case if the model didn't perfectly capitalize the day
                 console.warn(`Unexpected day format found: ${item.day}`);
             }
         });
@@ -88,35 +81,28 @@ app.post('/api/extract-schedule', upload.single('timetable'), async (req, res) =
         res.json({ schedule: structuredByDay });
 
     } catch (error) {
-        // Look at your node terminal to see this output!
         console.error("CRITICAL BACKEND ERROR:", error);
-
         if (error.status === 429) {
             return res.status(429).json({ error: 'System is busy. Please try again in a minute.' });
         }
-        
-        // This is what your frontend is currently catching
         res.status(500).json({ error: error.message || 'Failed to accurately parse the timetable image.' });
     }
 });
-
 
 // ==========================================
 // 2. GOOGLE AUTH ROUTES
 // ==========================================
 app.get('/api/auth/google', (req, res) => {
   const url = oauth2Client.generateAuthUrl({
-    access_type: 'offline', // Gives you a refresh token to stay logged in
+    access_type: 'offline', 
     scope: ['https://www.googleapis.com/auth/calendar.events'],
   });
   res.json({ url });
 });
 
-// 2. Endpoint where Google redirects the user after a successful login
 app.get('/oauth2callback', async (req, res) => {
   const { code } = req.query;
   try {
-    // Exchange the authorization code for access tokens
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
     res.redirect('http://127.0.0.1:5500/index.html?auth=success');
@@ -127,44 +113,85 @@ app.get('/oauth2callback', async (req, res) => {
 });
 
 // ==========================================
-// 3. GOOGLE CALENDAR EXPORT ROUTE
+// 3. GOOGLE CALENDAR EXPORT ROUTE (TIMEZONE INSULATED)
 // ==========================================
 app.post('/api/create-events', async (req, res) => {
   try {
-    const { schedule } = req.body; // Pass the JSON array extracted by Gemini
+    const { schedule, termStart, termEnd, breaks } = req.body; 
+    
+    if (!schedule || !termStart || !termEnd) {
+        return res.status(400).json({ error: 'Missing configuration metrics: schedule, termStart, or termEnd.' });
+    }
+
+    console.log(`\n--- RECEIVED EXPORT REQUEST ---`);
+    console.log(`Raw Frontend Inputs -> Start: ${termStart}, End: ${termEnd}`);
+
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
-    // FIX let users choose course start date
-    const dayToDateMap = {
-      'Monday': '2026-09-07',
-      'Tuesday': '2026-09-08',
-      'Wednesday': '2026-09-09',
-      'Thursday': '2026-09-10',
-      'Friday': '2026-09-11'
-    };
+    // 1. Format termEnd cleanly into the format Google's UNTIL string requires (YYYYMMDDTHHMMSSZ)
+    const cleanEndString = termEnd.replace(/-/g, '');
+    const semesterEndDate = `${cleanEndString}T235959Z`;
 
-    // FIX let users choose course end date
-    const semesterEndDate = '20261211T235959Z';
+    // 2. Build a dynamic list of exception dates (EXDATE) from the user's custom breaks
+    const exceptionDatesList = [];
+    (breaks || []).forEach(b => {
+        // Splitting by '-' and parsing explicitly keeps JavaScript inside local time execution context
+        const [sYear, sMonth, sDay] = b.start.split('-').map(Number);
+        const [eYear, eMonth, eDay] = b.end.split('-').map(Number);
+
+        let loopDate = new Date(sYear, sMonth - 1, sDay);
+        const stopDate = new Date(eYear, eMonth - 1, eDay);
+        
+        while (loopDate <= stopDate) {
+            const yyyy = loopDate.getFullYear();
+            const mm = String(loopDate.getMonth() + 1).padStart(2, '0');
+            const dd = String(loopDate.getDate()).padStart(2, '0');
+            exceptionDatesList.push(`${yyyy}${mm}${dd}`);
+            
+            loopDate = new Date(loopDate.getTime() + 24 * 60 * 60 * 1000);
+        }
+    });
 
     const flatSchedule = [];
- for (const day in schedule) {
+    for (const day in schedule) {
       schedule[day].forEach(item => {
-        // Ensure the item keeps its day property attached just in case
         flatSchedule.push({ ...item, day: day });
       });
     }
 
-    // Now loop over the flat array like before
+    // 3. Dynamically compute the first matching calendar date for each class
     for (const item of flatSchedule) {
-      const dateStr = dayToDateMap[item.day];
-      if (!dateStr) continue;
+      // FIX: Split the string manually to completely bypass the UTC-midnight timezone shifting bug
+      const [startYear, startMonth, startDay] = termStart.split('-').map(Number);
+      let firstClassDate = new Date(startYear, startMonth - 1, startDay);
+      
+      const safetyLimit = new Date(firstClassDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+      
+      while (DAYS_ORDER[firstClassDate.getDay()] !== item.day && firstClassDate < safetyLimit) {
+          firstClassDate = new Date(firstClassDate.getTime() + 24 * 60 * 60 * 1000);
+      }
 
-      const startDateTime = `${dateStr}T${item.start_time}:00`;
-      const endDateTime = `${dateStr}T${item.end_time}:00`;
+      const yyyy = firstClassDate.getFullYear();
+      const mm = String(firstClassDate.getMonth() + 1).padStart(2, '0');
+      const dd = String(firstClassDate.getDate()).padStart(2, '0');
+      
+      const baseDateIso = `${yyyy}-${mm}-${dd}`;
+      const startDateTime = `${baseDateIso}T${item.start_time}:00`;
+      const endDateTime = `${baseDateIso}T${item.end_time}:00`;
+
+      console.log(`Mapping ${item.course_code}: First Event Date calculated as -> ${startDateTime}`);
+
+      const timeClean = item.start_time.replace(/:/g, '');
+      const rruleComponents = [`RRULE:FREQ=WEEKLY;UNTIL=${semesterEndDate}`];
+      
+      if (exceptionDatesList.length > 0) {
+          const formattedExDates = exceptionDatesList.map(dStr => `${dStr}T${timeClean}00`).join(',');
+          rruleComponents.push(`EXDATE;TZID=America/Toronto:${formattedExDates}`);
+      }
 
       const event = {
-        summary: `${item.course_code} (Sec ${item.section || 'A'})`,
-        location: item.room,
+        summary: item.course_code,
+        location: item.room || 'TBD',
         description: 'Automatically added by Schedulo',
         start: {
           dateTime: startDateTime,
@@ -174,9 +201,7 @@ app.post('/api/create-events', async (req, res) => {
           dateTime: endDateTime,
           timeZone: 'America/Toronto',
         },
-        recurrence: [
-          `RRULE:FREQ=WEEKLY;UNTIL=${semesterEndDate}`
-        ],
+        recurrence: rruleComponents
       };
 
       await calendar.events.insert({
