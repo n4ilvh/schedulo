@@ -1,3 +1,9 @@
+:root {
+ --accent: #84975f;
+ --accent2: #f6d089;
+ --accent3: #4f513b;
+}
+
 body {
     padding: 0;
     font-family: sans-serif;
@@ -6,10 +12,40 @@ body {
 
 .title {
     font-size: 8ch;
-    color: #848b67;
+    color: var(--accent3);
     display: flex;
     align-items: center;
     justify-content: center;
+    /* background-color: yellow; */
+    text-align: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+
+}
+
+
+.header {
+    height: 100%;
+    display: flex;
+    padding: 10px;
+    align-items: center;
+    margin-top: 20px;
+    padding: 30px;
+}
+
+.header button {
+    background-color: var(--accent);
+    border-radius: 15px;
+    border: none;
+    height: 40px;
+    width: 40px;
+    transition: all ease 0.25s;
+    color: var(--accent2);
+}
+
+.header button:hover{
+    background-color: var(--accent3);
 }
 
 .button {
@@ -35,12 +71,9 @@ body {
 }
 
 .file-button {
-    transition: color 0.5s ease;
-}
+    height: 94%;
+    width: 100%;
 
-.file-button:hover {
-    color: #aba25d;
-    transition: color 0.5s ease;
 }
 
 .image-box {
@@ -100,6 +133,17 @@ body {
     align-items: center;
     padding: 10px 0px;
     gap: 12px;
+}
+
+
+.upload-button {
+    background-color: var(--accent);
+    width: 50px;
+    height: 50px;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 
@@ -174,13 +218,33 @@ body {
     font-size: 0.85rem;
 }
 
+.upload-container {
+    text-align: center;
+    border: dashed #84975f;
+    border-radius: 20px;
+    width: 65%;
+    height: 30vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all ease 0.3s;
+    
+}
+
+.upload-container:hover {
+    border: dashed var(--accent2);
+    transition: all ease 0.3s;
+}
+
 .upload-container label {
     display: inline-flex;      /* Allows flex behaviors like alignment while staying a button width */
+    flex-direction: column;
+    gap: 10px;
     align-items: center;
     justify-content: center;
     cursor: pointer;           /* Forces interactive cursor pointer finger */
     padding: 10px 20px;        /* Matches internal spacing of clean buttons */
-    font-size: 14px;
+    font-size: 17px;
     user-select: none;         /* Disables highlight artifacts on double click */
     text-align: center;
     color: #f6cf8a;
@@ -192,7 +256,9 @@ body {
     padding: 10px;
     display: flex;
     justify-content: center;
+    align-items: center;
     text-align: center;
+    flex-direction: column;
 }
 
 #edit {
@@ -288,7 +354,5 @@ body {
    MOBILE RESPONSIVE BREAKPOINT (768px and down)
    ========================================================= */
 @media (max-width: 768px) {
-    .title {
-        display: none;
-    }
+    
 }

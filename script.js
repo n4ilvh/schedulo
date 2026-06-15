@@ -1,17 +1,17 @@
 const fileSelector = document.querySelector('input');
-const start = document.querySelector('button');
+const start = document.getElementById('start');
 const img = document.querySelector('img');
-const textarea = document.getElementById('middle');
+const textarea = document.getElementById('status-text');
 const upper = document.getElementById('upper');
 const calendarGrid = document.getElementById('calendar-grid');
 const dateBox = document.getElementById('edit');
+const uploadContainer = document.getElementById('upload-container');
+const bottom = document.getElementById('bottom');
 
 const imgBox = document.getElementById('image-box');
 
 // Create UI buttons programmatically for Google Calendar
-const authButton = document.createElement('button');
-authButton.innerHTML = 'Connect Google Calendar';
-authButton.classList.add("button");
+const authButton = document.getElementById('login');
 
 const exportButton = document.createElement('button');
 exportButton.innerHTML = 'Export to Google Calendar';
@@ -21,14 +21,10 @@ exportButton.classList.add("button");
 imgBox.style.display = "none";
 calendarGrid.style.display = "none";
 dateBox.style.display = "none";
+bottom.style.display = 'none';
 
 // add buttons to top bar
-upper.appendChild(authButton);
 upper.append(exportButton);
-
-// Append our new workflow buttons right below the main scan button
-// start.insertAdjacentElement('afterend', authButton);
-// authButton.insertAdjacentElement('afterend', exportButton);
 
 const BACKEND_URL = 'http://localhost:3000';
 
@@ -42,35 +38,7 @@ window.onload = () => {
     }
 };
 
-// checks for log in
-app.get('/api/auth/status', async (req, res) => {
-    try {
-        // 1. Check if your OAuth client actually has credentials set
-        const tokens = oauth2Client.credentials;
-        
-        if (!tokens || !tokens.access_token) {
-            return res.json({ loggedIn: false });
-        }
 
-        // 2. Optional: Check if the access token has expired
-        const isExpired = tokens.expiry_date ? Date.now() >= tokens.expiry_date : true;
-        if (isExpired) {
-            // If you have a refresh token, you could refresh it here. 
-            // Otherwise, they are effectively logged out.
-            return res.json({ loggedIn: false, message: "Token expired" });
-        }
-
-        // 3. If tokens exist and are valid, they are logged in!
-        res.json({ 
-            loggedIn: true, 
-            scopes: tokens.scope 
-        });
-
-    } catch (error) {
-        console.error("Auth status check failed:", error);
-        res.status(500).json({ loggedIn: false, error: "Internal server error" });
-    }
-});
 
 // Display image on upload
 fileSelector.onchange = () => {
@@ -78,6 +46,8 @@ fileSelector.onchange = () => {
     if (file) {
         imgBox.style.display = "block";
         calendarGrid.style.display = "grid";
+        uploadContainer.style.display = 'none';
+        bottom.style.display = "block";
         var imgUrl = window.URL.createObjectURL(file);
         img.src = imgUrl;
     }
@@ -220,38 +190,6 @@ function renderCalendar(scheduleByDay) {
 }
 
 
-
-// ==========================================
-// 1.5 add dates/breaks
-// ==========================================
-document.addEventListener('DOMContentLoaded', () => {
-    const addBreakBtn = document.getElementById('add-break-btn');
-    const breaksContainer = document.getElementById('breaks-container');
-
-    // Function to add a new break range row
-    addBreakBtn.addEventListener('click', () => {
-        const breakRow = document.createElement('div');
-        breakRow.className = 'break-row';
-
-        breakRow.innerHTML = `
-            <div class="date-group">
-                <input type="date" class="date-input break-start" aria-label="Break Start Date">
-            </div>
-            <span style="color: #f6cf8a;">to</span>
-            <div class="date-group">
-                <input type="date" class="date-input break-end" aria-label="Break End Date">
-            </div>
-            <button type="button" class="remove-btn" title="Remove Break">&times;</button>
-        `;
-
-        // Event listener to remove this specific break row when clicking the 'X'
-        breakRow.querySelector('.remove-btn').addEventListener('click', () => {
-            breakRow.remove();
-        });
-
-        breaksContainer.appendChild(breakRow);
-    });
-});
 
 // Helper function to extract all chosen dates when parsing your timetable data
 function getSemesterDateData() {

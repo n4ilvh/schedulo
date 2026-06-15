@@ -5,22 +5,40 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles.css">
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
     <title>Schedulo</title>
 </head>
 <body>
+    <div class="header">   
+        <div style="color: #84975f;">Built by <a target="_blank" href="https://www.nailahabel.dev/" style="color: #4f513b; text-decoration: none; font-weight: 600;">Nailah Abel</a></div>
+        <div style="margin-left: auto; gap: 20px; display: flex;">
+            <button id="login"><i class="fa-brands fa-google"></i></button>
+            <button id="logout"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+        </div>
+    </div>
     <div class="title">Schedulo</div>
     <div class="container">
-        <div class="upper" id="upper">
-            <div class="upload-container">
-                <input type="file" id="file-upload" name="timetable" accept="image/*" hidden />
-                <label for="file-upload" class="file-button">Upload Timetable Image</label>
-            </div>
-            <button class="button">Parse Timetable</button>
-        </div>
-        <div class="middle" id="middle">
-        
+        <!-- <div class="upper" id="upper">
             
+            <button class="button" id="start">Parse Timetable</button>
+        </div> -->
+        <div class="middle" id="middle">
+            <div id="status-text"></div>
+            <div class="upload-container" id="upload-container">
+                
+                <input type="file" id="file-upload" name="timetable" accept="image/*" hidden />
+                <label for="file-upload" class="file-button">
+                    <div class="upload-button">
+                        <i class="fa-solid fa-file-arrow-up"></i>
+                    </div>
+                    <div style="color: #84975f;">Upload or Paste an Image</div>
+                </label>
+            </div>
         </div>
+        
 <div class="edit" id="edit">
     <div class="date-group">
         <label for="first-class">Start of Semester</label>
@@ -36,7 +54,7 @@
         <div id="breaks-container" class="breaks-container"></div>
     </div>
 </div>
-        <div class="bottom">
+        <div class="bottom" id="bottom">
             <div class="image-box" id="image-box">
                 <div class="img-container">
                     <img src="">
