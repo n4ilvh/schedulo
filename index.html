@@ -12,14 +12,18 @@
     <title>Schedulo</title>
 </head>
 <body>
-    <div class="header">   
-        <div style="color: #84975f;">Built by <a target="_blank" href="https://www.nailahabel.dev/" style="color: #4f513b; text-decoration: none; font-weight: 600;">Nailah Abel</a></div>
-        <div style="margin-left: auto; gap: 20px; display: flex;">
+    <div class="top-bar">   
+        <div style="color: #84975f;">Built by <div class="name">Nailah Abel</div></div>
+        <div class="right-buttons">
+            <a target="_blank" href="https://www.nailahabel.dev/">N</a>
             <button id="login"><i class="fa-brands fa-google"></i></button>
             <button id="logout"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
         </div>
     </div>
-    <div class="title">Schedulo</div>
+    <div class="header">
+        <div class="title">Schedulo</div>
+        <div class="desc">Instantly convert an image of your timetable into structured Google Calendar events.</div>
+    </div>
     <div class="container">
         <!-- <div class="upper" id="upper">
             
@@ -39,35 +43,48 @@
             </div>
         </div>
         
-<div class="edit" id="edit">
-    <div class="date-group">
-        <label for="first-class">Start of Semester</label>
-        <input type="date" id="first-class" class="date-input">
+    <div class="edit" id="edit">
+        <div class="date-group">
+            <label for="first-class">Start of Semester</label>
+            <input type="date" id="first-class" class="date-input">
+        </div>
+        
+        <div class="date-group">
+            <label for="last-class">End of Semester</label>
+            <input type="date" id="last-class" class="date-input">
+        </div>
+        <button type="button" id="add-break-btn" class="add-button">+ Add Break Range</button>
+        <div class="breaks-section">
+            <div id="breaks-container" class="breaks-container"></div>
+        </div>
     </div>
     
-    <div class="date-group">
-        <label for="last-class">End of Semester</label>
-        <input type="date" id="last-class" class="date-input">
-    </div>
-    <button type="button" id="add-break-btn" class="add-button">+ Add Break Range</button>
-    <div class="breaks-section">
-        <div id="breaks-container" class="breaks-container"></div>
-    </div>
-</div>
-        <div class="bottom" id="bottom">
+    <div class="bottom" id="bottom">
+        <div class="left-section">
             <div class="image-box" id="image-box">
                 <div class="img-container">
                     <img src="">
                 </div>
+                <button class="change-image" id="change-image">
+                    <i class="fa-solid fa-rotate"></i>
+                    Change Image
+                </button>
             </div>
-
-            <div id="calendar-grid" class="calendar-grid">
-                <!-- <div class="day-column">Monday</div> -->
+            <div class="spinner-container" id="loading">
+                <div class="loading-ring"></div>
+                <span>Extracting timetable details...</span>
             </div>
         </div>
+        <div id="calendar-grid" class="calendar-grid">
+                <!-- <div class="day-column">Monday</div> -->
+                 <!-- <div class="day-column"> Day
+                    
+
+                 </div> -->
+        </div>
     </div>
-<script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
-<script src="script.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+    <script src="script.js"></script>
 
 </body>
 </html>

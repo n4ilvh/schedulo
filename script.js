@@ -1,14 +1,15 @@
 const fileSelector = document.querySelector('input');
 const start = document.getElementById('start');
 const img = document.querySelector('img');
-const textarea = document.getElementById('status-text');
 const upper = document.getElementById('upper');
 const calendarGrid = document.getElementById('calendar-grid');
 const dateBox = document.getElementById('edit');
 const uploadContainer = document.getElementById('upload-container');
 const bottom = document.getElementById('bottom');
-
+const loadingCircle = document.getElementById('loading');
 const imgBox = document.getElementById('image-box');
+const changeImage = document.getElementById('change-image');
+
 
 // Create UI buttons programmatically for Google Calendar
 const authButton = document.getElementById('login');
@@ -22,9 +23,9 @@ imgBox.style.display = "none";
 calendarGrid.style.display = "none";
 dateBox.style.display = "none";
 bottom.style.display = 'none';
+changeImage.style.display = 'none';
 
 // add buttons to top bar
-upper.append(exportButton);
 
 const BACKEND_URL = 'http://localhost:3000';
 
@@ -32,31 +33,127 @@ const BACKEND_URL = 'http://localhost:3000';
 window.onload = () => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('auth') === 'success') {
-        textarea.innerHTML = 'Google Calendar connected successfully!';
     } else if (urlParams.get('auth') === 'error') {
-        textarea.innerHTML = 'Calendar authorization failed. Please try again.';
     }
 };
+
+// =========================================================
+// CLIPBOARD PASTE IMAGE HANDLING
+// =========================================================
+document.addEventListener('paste', async (event) => {
+    // 1. Access clipboard data items
+    const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+    let file = null;
+
+    // 2. Loop through items to find an image file
+    for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+            file = items[i].getAsFile();
+            break;
+        }
+    }
+
+    if (!file) return;
+    event.preventDefault();
+
+    // 3. Sync the pasted file with your hidden input file selector
+    // This keeps your code consistent so other features know a file exists
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    fileSelector.files = dataTransfer.files;
+
+    // --- STEP 1: Update UI Containers (Same as fileSelector.onchange) ---
+    imgBox.style.display = "flex";
+    uploadContainer.style.display = 'none';
+    changeImage.style.display = 'flex';
+    
+            
+    
+    // Render the local preview source
+    const imgUrl = window.URL.createObjectURL(file);
+    img.src = imgUrl;
+
+    const formData = new FormData();
+    formData.append('timetable', file);
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/extract-schedule`, {
+             method: 'POST',
+             body: formData
+        });
+        
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Server error occurred during processing.');
+        }
+
+        dateBox.style.display = "flex";
+        bottom.style.display = "flex";
+        loadingCircle.style.display = "none";
+
+        calendarGrid.style.display = "grid";
+        // Re-render editable calendar cards
+        renderCalendar(data.schedule);
+
+    } catch (error) {
+        if (loadingCircle) loadingCircle.style.display = "none";
+        console.error("Paste extraction workflow broken:", error);
+    }
+});
 
 
 
 // Display image on upload
-fileSelector.onchange = () => {
+fileSelector.onchange = async () => {
     const file = fileSelector.files[0];
-    if (file) {
-        imgBox.style.display = "block";
+    if (!file) return;
+
+    // --- STEP 1: UI Layout Mutations (Reveal your layout spaces) ---
+    imgBox.style.display = "flex";
+    uploadContainer.style.display = 'none';
+    bottom.style.display = "flex";
+    
+    // Render the local preview source
+    var imgUrl = window.URL.createObjectURL(file);
+    img.src = imgUrl;
+
+    // --- STEP 2: Instant Background Extraction Flow ---
+
+    const formData = new FormData();
+    formData.append('timetable', file);
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/extract-schedule`, {
+             method: 'POST',
+             body: formData
+        });
+        
+        const data = await response.json();
+
+        // Check response validation AFTER parsing payload
+        if (!response.ok) {
+            throw new Error(data.error || 'Server error occurred during processing.');
+        }
+
+        dateBox.style.display = "flex";
+        bottom.style.display = "flex";
+        loadingCircle.style.display = "none";
+        changeImage.style.display = 'flex';
+
+        // Re-render your editable data blocks dynamically
         calendarGrid.style.display = "grid";
-        uploadContainer.style.display = 'none';
-        bottom.style.display = "block";
-        var imgUrl = window.URL.createObjectURL(file);
-        img.src = imgUrl;
+
+        renderCalendar(data.schedule);
+
+    } catch (error) {
+        console.error("Extraction workflow broken:", error);
     }
 };
 
 // Kick off OAuth authentication when clicked
 authButton.onclick = async () => {
     try {
-        textarea.innerHTML = 'Connecting to Google Calendar...';
         const response = await fetch(`${BACKEND_URL}/api/auth/google`);
         const data = await response.json();
         
@@ -64,9 +161,19 @@ authButton.onclick = async () => {
         window.location.href = data.url;
     } catch (error) {
         console.error(error);
-        textarea.innerHTML = 'Error fetching Google Authentication link.';
     }
 };
+
+// change image button handling
+changeImage.addEventListener('click', () => {
+    // reset to home page
+    imgBox.style.display = "none";
+    calendarGrid.style.display = "none";
+    dateBox.style.display = "none";
+    bottom.style.display = 'none';
+    uploadContainer.style = 'flex';
+    fileSelector.value = '';
+})
 
 // Adding a break range
 document.addEventListener('DOMContentLoaded', () => {
@@ -98,45 +205,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// =========================================================
-// TEXT RECOGNITION & RENDER FLOW
-// =========================================================
-start.onclick = async () => {
-    const file = fileSelector.files[0];
-    if (!file) {
-        textarea.innerHTML = 'Please select an image';
-        return;
-    }
-
-    textarea.innerHTML = 'Processing...';
-
-    const formData = new FormData();
-    formData.append('timetable', file);
-
-    try {
-        const response = await fetch(`${BACKEND_URL}/api/extract-schedule`, {
-             method: 'POST',
-             body: formData
-        });
-        
-        const data = await response.json();
-
-        // FIXED: Check response.ok AFTER parsing data so we can securely catch server errors
-        if (!response.ok) {
-            throw new Error(data.error || 'Server error');
-        }
-
-        dateBox.style.display = "flex";
-        textarea.innerHTML = 'Schedule extracted! Review and adjust any values directly in the calendar columns below before exporting.';
-
-        // Call our rendering function to build your new UI columns
-        renderCalendar(data.schedule);
-
-    } catch (error) {
-        console.error(error);
-        textarea.innerHTML = `Error. Could not detect timetable.`;
-    }
-};
 
 // Dynamically build your editable day divs
 function renderCalendar(scheduleByDay) {
@@ -163,10 +231,10 @@ function renderCalendar(scheduleByDay) {
         const dayEvents = scheduleByDay[dayName] || [];
 
         if (dayEvents.length === 0) {
-            const noClassMessage = document.createElement('p');
-            noClassMessage.classList.add('no-class-msg');
-            noClassMessage.innerText = 'No classes';
-            dayColumn.appendChild(noClassMessage);
+            // const noClassMessage = document.createElement('p');
+            // noClassMessage.classList.add('no-class-msg');
+            // noClassMessage.innerText = 'No classes';
+            // dayColumn.appendChild(noClassMessage);
         } else {
             dayEvents.forEach(item => {
                 const classCard = document.createElement('div');
@@ -273,11 +341,9 @@ exportButton.onclick = async () => {
     const dayColumns = calendarGrid?.querySelectorAll('.day-column');
 
     if (!dayColumns || dayColumns.length === 0) {
-        textarea.innerHTML = 'No parsed schedule UI found to export. Please parse a timetable first.';
         return;
     }
 
-    textarea.innerHTML = 'Scraping changes from your interface and importing into Google Calendar...';
 
     // RE-ASSEMBLE DATA: Read current text values directly from the UI inputs
     const updatedSchedule = {
@@ -318,10 +384,8 @@ exportButton.onclick = async () => {
             throw new Error(data.error || 'Failed to inject calendar events.');
         }
 
-        textarea.innerHTML = `🎉 Success! ${data.message}`;
 
     } catch (error) {
         console.error(error);
-        textarea.innerHTML = `Calendar Error: ${error.message}`;
     }
 };

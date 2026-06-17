@@ -4,11 +4,27 @@
  --accent3: #4f513b;
 }
 
+@font-face {
+  font-family: KiwiSoda;
+  src: url(assets/fonts/KiwiSoda.ttf) format('truetype');
+}
+
 body {
     padding: 0;
     font-family: sans-serif;
     background-color: #f8f5e4;
+    
+    
 }
+
+.header {
+    gap: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
 
 .title {
     font-size: 8ch;
@@ -16,37 +32,77 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    /* background-color: yellow; */
     text-align: center;
     font-family: 'Syne', sans-serif;
     font-weight: 800;
     text-transform: uppercase;
+}
+
+.desc {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    text-align: center;
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: 1.5;max-width: 440px;
+    margin: 0 auto;
+    color: #83965F; /* Middle sage */
 
 }
 
-
-.header {
+.top-bar {
     height: 100%;
     display: flex;
     padding: 10px;
     align-items: center;
     margin-top: 20px;
+    margin-bottom: 50px;
     padding: 30px;
 }
 
-.header button {
+.top-bar button {
     background-color: var(--accent);
     border-radius: 15px;
-    border: none;
-    height: 40px;
-    width: 40px;
+    height: 50px;
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
     transition: all ease 0.25s;
     color: var(--accent2);
+    border: none;
+    
 }
 
-.header button:hover{
+.top-bar button:hover{
     background-color: var(--accent3);
+    transform: translateY(-2px); 
 }
+
+.top-bar a {
+    background-color: var(--accent);
+    border-radius: 15px;
+    height: 50px;
+    width: 50px;
+
+    transition: all ease 0.25s;
+    color: var(--accent2);
+    text-decoration: none;
+    text-align: center;
+    font-family: kiwisoda;
+    font-size: 30px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.top-bar a:hover{
+    background-color: var(--accent3);
+    transform: translateY(-2px); 
+}
+
 
 .button {
     background-color: #f6cf8a;
@@ -64,6 +120,28 @@ body {
     color: #f6cf8a;
     cursor: pointer;
     transition: background-color 0.5s ease;
+    
+}
+
+.right-buttons {
+    margin-left: auto; 
+    gap: 20px; 
+    display: flex;
+}
+
+
+.name {
+    color: var(--accent); 
+    text-decoration: none; 
+    font-weight: 600;
+    transition: all ease 0.5s;
+    display: inline-block; 
+    margin-left: 6px; 
+}
+
+.name:hover {
+    color: var(--accent3);
+    transition: all ease 0.5s;
 }
 
 .container {
@@ -77,14 +155,13 @@ body {
 }
 
 .image-box {
-    border: 1px solid white;
-    border-radius: 10px;
-    background-color: #f6cf8a;
+     border-radius: 10px;
     display: flex;
     align-items: center;   
     justify-content: center;   
-    width: 20%;
+    width: 50%;
     box-sizing: border-box;
+    flex-direction: column;
 }
 
 .image-box div {
@@ -128,11 +205,12 @@ body {
 
 .bottom {
     display: flex;
-    width: 100%;
-    height: 600px;
+    justify-content: center;
     align-items: center;
-    padding: 10px 0px;
+    text-align: center;
+    padding: 20px 10px;
     gap: 12px;
+    flex-direction: row;
 }
 
 
@@ -146,17 +224,35 @@ body {
     justify-content: center;
 }
 
+.left-section {
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    flex-direction: column;
+}
+
+.change-image {
+    color: var(--accent2);
+    background-color: var(--accent);
+    width: max-content;
+    padding: 5px 15px;
+    gap: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    margin: auto;
+    border: 0.15rem solid var(--accent3);
+}
 
 /* Main Container: Organizes the 5 days into columns */
 .calendar-grid {
     display: grid;
-    grid-template-columns: repeat(7, 11vw); /* 5 equal-width columns */
+    grid-template-rows: repeat(7, 8vw); /* 5 equal-width columns */
     border-radius: 15px;
-    gap: 10px;
     padding: 20px;
     background-color: #F7CF89; /* Your sand yellow canvas */
-    flex: 1;
-    height: 500px;
+    height: max-content;
+    width: 55%;
     justify-content: center;
 }
 
@@ -166,6 +262,7 @@ body {
     border-radius: 12px;
     padding: 12px;
     text-align: center;
+    height: 100px;
     
 }
 
@@ -220,20 +317,23 @@ body {
 
 .upload-container {
     text-align: center;
-    border: dashed #84975f;
-    border-radius: 20px;
+    border: dashed #84975f 2px;
+    border-radius: 1.5rem;
     width: 65%;
     height: 30vh;
     display: flex;
     justify-content: center;
     align-items: center;
     transition: all ease 0.3s;
-    
+    background-color: #fffef9;
+    box-shadow: 0 30px 60px -15px rgba(79, 81, 57, 0.08);
 }
 
 .upload-container:hover {
-    border: dashed var(--accent2);
-    transition: all ease 0.3s;
+transition: all ease 0.3s;
+  border-color: #4F5139;
+  background-color: #ffffff;
+  transform: translateY(-2px); 
 }
 
 .upload-container label {
@@ -350,9 +450,36 @@ body {
     height: 100%;
 }
 
+
+.spinner-container {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px; /* Spacing between the spinning ring and loading text */
+}
+
+.loading-ring {
+    width: 22px;
+    height: 22px;
+    border: 2.5px solid rgba(79, 81, 59, 0.2); /* Muted faint background track */
+    border-top: 2.5px solid var(--accent3);     /* Dark accent spinning slice */
+    border-radius: 50%;
+    animation: smooth-spin 0.8s linear infinite;
+}
+
+@keyframes smooth-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
 /* =========================================================
    MOBILE RESPONSIVE BREAKPOINT (768px and down)
    ========================================================= */
 @media (max-width: 768px) {
-    
+    body {
+        background-color: black;
+    }
 }
