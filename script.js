@@ -65,10 +65,9 @@ document.addEventListener('paste', async (event) => {
     // --- STEP 1: Update UI Containers (Same as fileSelector.onchange) ---
     imgBox.style.display = "flex";
     uploadContainer.style.display = 'none';
-    changeImage.style.display = 'flex';
+    bottom.style.display = "flex";
     
-            
-    
+
     // Render the local preview source
     const imgUrl = window.URL.createObjectURL(file);
     img.src = imgUrl;
@@ -231,10 +230,7 @@ function renderCalendar(scheduleByDay) {
         const dayEvents = scheduleByDay[dayName] || [];
 
         if (dayEvents.length === 0) {
-            // const noClassMessage = document.createElement('p');
-            // noClassMessage.classList.add('no-class-msg');
-            // noClassMessage.innerText = 'No classes';
-            // dayColumn.appendChild(noClassMessage);
+            return;
         } else {
             dayEvents.forEach(item => {
                 const classCard = document.createElement('div');
