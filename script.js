@@ -6,6 +6,7 @@ const calendarGrid = document.getElementById('calendar-grid');
 const dateBox = document.getElementById('edit');
 const uploadContainer = document.getElementById('upload-container');
 const bottom = document.getElementById('bottom');
+const middle = document.getElementById('middle');
 const loadingCircle = document.getElementById('loading');
 const imgBox = document.getElementById('image-box');
 const changeImage = document.getElementById('change-image');
@@ -66,6 +67,7 @@ document.addEventListener('paste', async (event) => {
     imgBox.style.display = "flex";
     uploadContainer.style.display = 'none';
     bottom.style.display = "flex";
+    middle.style.display = "none";
     
 
     // Render the local preview source
@@ -91,7 +93,7 @@ document.addEventListener('paste', async (event) => {
         bottom.style.display = "flex";
         loadingCircle.style.display = "none";
 
-        calendarGrid.style.display = "grid";
+        calendarGrid.style.display = "flex";
         // Re-render editable calendar cards
         renderCalendar(data.schedule);
 
@@ -112,6 +114,7 @@ fileSelector.onchange = async () => {
     imgBox.style.display = "flex";
     uploadContainer.style.display = 'none';
     bottom.style.display = "flex";
+    middle.style.display = "none";
     
     // Render the local preview source
     var imgUrl = window.URL.createObjectURL(file);
@@ -139,9 +142,10 @@ fileSelector.onchange = async () => {
         bottom.style.display = "flex";
         loadingCircle.style.display = "none";
         changeImage.style.display = 'flex';
+        middle.style.display = "flex";
 
         // Re-render your editable data blocks dynamically
-        calendarGrid.style.display = "grid";
+        calendarGrid.style.display = "flex";
 
         renderCalendar(data.schedule);
 
@@ -208,10 +212,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // Dynamically build your editable day divs
 function renderCalendar(scheduleByDay) {
     const calendarGrid = document.getElementById('calendar-grid');
-    if (!calendarGrid) {
-        console.error("Missing container element: Add <div id='calendar-grid'></div> to your HTML.");
-        return;
-    }
     
     calendarGrid.innerHTML = '';
     const daysOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];

@@ -12,9 +12,8 @@
 body {
     padding: 0;
     font-family: sans-serif;
-    background-color: #f8f5e4;
-    
-    
+    background-color: #f8f5e4;    
+
 }
 
 .header {
@@ -57,8 +56,7 @@ body {
     display: flex;
     padding: 10px;
     align-items: center;
-    margin-top: 20px;
-    margin-bottom: 50px;
+    margin-top: 10px;
     padding: 30px;
 }
 
@@ -204,10 +202,9 @@ body {
 }
 
 .bottom {
-    display: flex;
     text-align: center;
-    padding: 20px 10px;
     flex-direction: row;
+    align-items: center;
     justify-content: center;
 }
 
@@ -230,6 +227,11 @@ body {
     width: 20%;
 }
 
+.right-section {
+    display: flex;
+    padding: 20px;
+}
+
 .change-image {
     color: var(--accent2);
     background-color: var(--accent);
@@ -249,9 +251,10 @@ body {
     border-radius: 15px;
     padding: 20px;
     background-color: #F7CF89; /* Your sand yellow canvas */
-    height: auto;
-    width: 100%;
+    
+    height: 500px;
     justify-content: center;
+    flex-direction: row;
 
 }
 
@@ -262,6 +265,7 @@ body {
     padding: 12px;
     text-align: center;
     height: 100px;
+    width: 100%;
     
 }
 
